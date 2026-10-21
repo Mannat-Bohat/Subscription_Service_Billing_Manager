@@ -1,0 +1,84 @@
+//Subscription Service Billing Manager
+#include <iostream>
+#include <vector>
+#include <string>
+
+// Structure to hold data for a single member subscription
+struct UserSubscription {
+    std::string customerName;
+    char planType;     // 'B' for Basic, 'S' for Standard, 'P' for Premium
+    int monthsActive;  // How many months they have been subscribed
+    bool isAutoRenew;  // true if renewal is active, false if cancelled
+};
+
+// Function to calculate the bill for a single user
+double calculateMonthlyBill(const UserSubscription& user) {
+    // If the user cancelled auto-renew, they are not charged for the next cycle
+    if (!user.isAutoRenew) {
+        return 0.0;
+    }
+
+    double basePrice = 0.0;
+
+    // Determine price based on plan type
+    switch (user.planType) {
+        case 'B': case 'b': basePrice = 9.99;  break;  // Basic Plan
+        case 'S': case 's': basePrice = 14.99; break;  // Standard Plan
+        case 'P': case 'p': basePrice = 19.99; break;  // Premium Plan
+        default:            basePrice = 0.0;   break;
+    }
+
+    // Real-world logic: Give a loyalty 15% discount if user is active for over 12 months
+    if (user.monthsActive > 12) {
+        basePrice = basePrice * 0.85; 
+    }
+
+    return basePrice;
+}
+
+// Function to print a detailed report for the entire company database
+void generateBillingReport(const std::vector<UserSubscription>& database) {
+    double totalCompanyRevenue = 0.0;
+    int activeUsersCount = 0;
+
+    std::cout << "\n==============================================" << std::endl;
+    std::cout << "        MONTHLY USER BILLING REPORT          " << std::endl;
+    std::cout << "==============================================" << std::endl;
+
+    for (const auto& user : database) {
+        double userBill = calculateMonthlyBill(user);
+        totalCompanyRevenue += userBill;
+
+        std::cout << "Customer: " << user.customerName << "\n";
+        std::cout << "Plan: [" << user.planType << "] | Months Subscribed: " << user.monthsActive << "\n";
+        
+        if (user.isAutoRenew) {
+            std::cout << "Status: ACTIVE | Next Charge: $" << userBill << "\n";
+            activeUsersCount++;
+        } else {
+            std::cout << "Status: CANCELLED (Pending expiration) | Next Charge: $0.00\n";
+        }
+        std::cout << "----------------------------------------------" << std::endl;
+    }
+
+    std::cout << "\n--- Financial Summary ---" << std::endl;
+    std::cout << "Total Active Billing Profiles: " << activeUsersCount << std::endl;
+    std::cout << "Projected Next Month Revenue: $" << totalCompanyRevenue << std::endl;
+    std::cout << "==============================================" << std::endl;
+}
+
+int main() {
+    // A dynamic array acting as our live user database
+    std::vector<UserSubscription> userDatabase;
+
+    // Simulating database entries
+    userDatabase.push_back({"Alice Smith", 'P', 5, true});    // Premium user
+    userDatabase.push_back({"Bob Jones", 'B', 18, true});    // Basic user with > 12 months loyalty discount
+    userDatabase.push_back({"Charlie Brown", 'S', 3, false});// Cancelled subscription
+    userDatabase.push_back({"Diana Prince", 'P', 24, true});  // Premium user with loyalty discount
+
+    // Call function to run calculations and generate company report
+    generateBillingReport(userDatabase);
+
+    return 0;
+}
